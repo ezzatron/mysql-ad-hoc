@@ -16,7 +16,7 @@ rely on a real MySQL server.
 
 ## Usage
 
-### `mysql-ad-hoc`
+### mysql-ad-hoc
 
     mysql-ad-hoc [path]
 
@@ -24,7 +24,7 @@ Opens a command line MySQL client connected to the database at `[path]`. If the
 database does not exist, a new one will be created. `[path]` defaults to the
 current working directory.
 
-### `mysqld-ad-hoc`
+### mysqld-ad-hoc
 
     mysqld-ad-hoc [path]
 
