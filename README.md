@@ -32,9 +32,13 @@ Creates a temporary MySQL server for the database at `[path]`. If the database
 does not exist, a new one will be created. `[path]` defaults to the current
 working directory.
 
-To connect to the server, use the socket file at `[path]/mysql.sock`:
+The server will run until control-c is pressed (SIGINT). To connect to the
+server, use the socket file at `[path]/mysql.sock`:
 
     mysql --socket=mysql.sock
+
+The server will also shut down automatically when the parent process exits,
+making it extremely suitable for execution from within another application.
 
 ## Features
 
