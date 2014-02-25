@@ -51,7 +51,7 @@ To connect to the server, use the socket file at `[path]/mysql.sock`:
 
 ## Requirements
 
-- Bash
+- Bash.
 - [mysql_install_db], [mysqld_safe], [mysql], and [mysqladmin] must be in the
   system path.
 - Probably requires a new-ish version of MySQL. Tested with MySQL 5.6.16.
