@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+
+if [ "--help" = "$1" ]; then
+    echo "Usage: mysql-ad-hoc [path]"
+    exit;
+fi
+if [ "--version" = "$1" ]; then
+    echo "mysql-ad-hoc 0.1.0"
+    exit;
+fi
+
+errorExit()
+{
+    echo "$1" 1>&2
+    exit 1
+}
+
+MYSQL="$(which mysql)"
+if test -z "$MYSQL"; then
+    errorExit "Error: mysql executable not found."
+fi
+
+MYSQLD_AD_HOC="$(dirname "$0")/mysqld-ad-hoc"
+if [ ! -f "$MYSQLD_AD_HOC" ] ; then
+    errorExit "Error: mysqld-ad-hoc executable not found."
+fi
+
+ROOT_PATH="$(echo "${1:-.}" | sed 's|^\([^./]\)|./\1|')"
+SOCKET_PATH="$ROOT_PATH/mysql.sock"
+
+echo "Executing $MYSQLD_AD_HOC $ROOT_PATH"
+"$MYSQLD_AD_HOC" "$ROOT_PATH" &
+SERVER_PID="$!"
+
+while [ ! -S "$SOCKET_PATH" ] ; do
+    sleep 0.1
+done
+
+"$MYSQL" "--socket=$SOCKET_PATH"
+kill "$SERVER_PID"
+wait
