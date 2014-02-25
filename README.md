@@ -6,7 +6,7 @@
 
 ## Purpose
 
-*MySQL ad hoc* is an SQLite-like command line tool for creating short lifespan
+*MySQL ad hoc* is an [SQLite]-like command line tool for creating short lifespan
 [MySQL] databases for testing purposes. It allows the user to create a database
 in an arbitrary directory, completely isolated from other databases on the same
 system.
@@ -52,11 +52,19 @@ To connect to the server, use the socket file at `[path]/mysql.sock`:
 ## Requirements
 
 - Bash
-- `mysql_install_db`, `mysqld_safe`, `mysql`, and `mysqladmin` must be in the
+- [mysql_install_db], [mysqld_safe], [mysql], and [mysqladmin] must be in the
   system path.
+- Probably requires a new-ish version of MySQL. Tested with MySQL 5.6.16.
 - No Windows support, sorry.
 
 <!-- References -->
 
+[SQLite]: http://www.sqlite.org/
+[MySQL]: http://www.mysql.com/
+[mysql_install_db]: https://dev.mysql.com/doc/refman/5.7/en/mysql-install-db.html
+[mysqld_safe]: http://dev.mysql.com/doc/refman/5.7/en/mysqld-safe.html
+[mysql]: http://dev.mysql.com/doc/refman/5.7/en/mysql.html
+[mysqladmin]: http://dev.mysql.com/doc/refman/5.7/en/mysqladmin.html
+
 [Semantic versioning]: http://semver.org/
-[version-image]: http://img.shields.io/:semver-0.1.0-red.svg "This project uses semantic versioning"
+[version-image]: http://img.shields.io/:semver-0.1.0-yellow.svg "This project uses semantic versioning"
