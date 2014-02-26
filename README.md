@@ -44,6 +44,7 @@ making it extremely suitable for execution from within another application.
 
 - Doesn't use any networking, only local socket access is allowed.
 - User permissions are ignored, no permission granting is necessary.
+- Skips as much unnecessary stuff as possible.
 - Socket located at `[path]/mysql.sock`.
 - PID file located at `[path]/mysql.pid`.
 - Error log located at `[path]/mysql.err`.
@@ -51,6 +52,8 @@ making it extremely suitable for execution from within another application.
 
 ## Caveats
 
+- Initial database creation takes much longer that SQLite; around 10-15 seconds
+  on a current-gen iMac. Any tips on reducing this time are welcome.
 - Unsuitable for production use. Seriously, just don't.
 
 ## Requirements

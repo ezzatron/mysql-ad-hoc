@@ -38,7 +38,16 @@ installDatabase()
     fi
 
     echo "Installing new database to $1"
-    "$MYSQL_INSTALL_DB" "--datadir=$1"
+    "$MYSQL_INSTALL_DB" \
+        --defaults-file=/dev/null \
+        "--datadir=$1" \
+        --socket=./mysql.sock \
+        --pid-file=./mysql.pid \
+        --log-error=./mysql.err \
+        --general-log=1 \
+        --general-log-file=./mysql.log \
+        --skip-networking \
+        --skip-grant-tables
 }
 
 startServer()
