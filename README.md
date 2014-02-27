@@ -6,8 +6,8 @@
 
 ## Purpose
 
-*MySQL ad hoc* is an [SQLite]-like command line tool for creating short lifespan
-[MySQL] databases for testing purposes. It allows the user to create a database
+*MySQL ad hoc* is a command line tool for creating short lifespan [MySQL]
+databases for testing purposes. It allows the user to create a database
 in an arbitrary directory, completely isolated from other databases on the same
 system.
 
