@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 
 if [ "--help" = "$1" ]; then
-    echo "Usage: mysql-ad-hoc [path]"
-    exit;
+    echo "Usage: mysql-ad-hoc [path] [port] [address]"
+    exit
 fi
 if [ "--version" = "$1" ]; then
     echo "mysql-ad-hoc 0.1.0"
-    exit;
+    exit
 fi
 
 errorExit()
@@ -33,8 +33,16 @@ fi
 ROOT_PATH="$(echo "${1:-.}" | sed 's|^\([^./]\)|./\1|')"
 SOCKET_PATH="$ROOT_PATH/mysql.sock"
 
-echo "Executing $MYSQLD_AD_HOC $ROOT_PATH"
-"$MYSQLD_AD_HOC" "$ROOT_PATH" > /dev/null &
+PORT="$2"
+ADDRESS="${3:-0.0.0.0}"
+
+if [ "$PORT" ]; then
+    echo "Executing "$MYSQLD_AD_HOC" "$ROOT_PATH" "$PORT" "$ADDRESS" >/dev/null 2>&1 &"
+    "$MYSQLD_AD_HOC" "$ROOT_PATH" "$PORT" "$ADDRESS" >/dev/null 2>&1 &
+else
+    echo "Executing "$MYSQLD_AD_HOC" "$ROOT_PATH" >/dev/null 2>&1 &"
+    "$MYSQLD_AD_HOC" "$ROOT_PATH" >/dev/null 2>&1 &
+fi
 SERVER_PID="$!"
 
 while [ ! -S "$SOCKET_PATH" ]; do
@@ -56,8 +64,8 @@ stopServer()
 }
 
 if [ -S "$SOCKET_PATH" ]; then
-    NUM_CONNECTIONS=$("$MYSQLADMIN" "--socket=$ROOT_PATH/mysql.sock" processlist | wc -l)
-    NUM_CONNECTIONS=$(expr $NUM_CONNECTIONS - 4)
+    NUM_CONNECTIONS="$("$MYSQLADMIN" "--socket=$ROOT_PATH/mysql.sock" processlist | wc -l)"
+    NUM_CONNECTIONS="$(expr $NUM_CONNECTIONS - 4)"
 
     if [ "$NUM_CONNECTIONS" -eq "1" ]; then
         echo "No active client connections detected"

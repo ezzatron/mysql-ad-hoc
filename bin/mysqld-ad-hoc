@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 
 if [ "--help" = "$1" ]; then
-    echo "Usage: mysqld-ad-hoc [path]"
-    exit;
+    echo "Usage: mysqld-ad-hoc [path] [port] [address]"
+    exit
 fi
 if [ "--version" = "$1" ]; then
     echo "mysqld-ad-hoc 0.1.0"
-    exit;
+    exit
 fi
 
 errorExit()
@@ -30,7 +30,14 @@ if [ -z "$MYSQLADMIN" ]; then
     errorExit "Error: mysqladmin executable not found."
 fi
 
-MYSQL_OPTIONS="--defaults-file=/dev/null --socket=./mysql.sock --pid-file=./mysql.pid --log-error=./mysql.err --general-log=1 --general-log-file=./mysql.log --skip-networking --skip-grant-tables"
+
+ROOT_PATH="$(echo "${1:-.}" | sed 's|^\([^./]\)|./\1|')"
+SOCKET_PATH="$ROOT_PATH/mysql.sock"
+
+PORT="$2"
+ADDRESS="${3:-0.0.0.0}"
+
+MYSQL_OPTIONS="--defaults-file=/dev/null --socket=./mysql.sock --pid-file=./mysql.pid --log-error=./mysql.err --general-log=1 --general-log-file=./mysql.log --skip-grant-tables"
 
 installDatabase()
 {
@@ -46,7 +53,12 @@ installDatabase()
 startServer()
 {
     echo "Starting MySQL server"
-    "$MYSQLD_SAFE" $MYSQL_OPTIONS "--datadir=$1" &
+
+    if [ "$PORT" ]; then
+        "$MYSQLD_SAFE" $MYSQL_OPTIONS "--bind-address=$ADDRESS" "--port=$PORT" "--datadir=$1" &
+    else
+        "$MYSQLD_SAFE" $MYSQL_OPTIONS --skip-networking "--datadir=$1" &
+    fi
 }
 
 stopServer()
@@ -54,9 +66,6 @@ stopServer()
     echo "Stopping MySQL server"
     "$MYSQLADMIN" "--socket=$1/mysql.sock" shutdown
 }
-
-ROOT_PATH="$(echo "${1:-.}" | sed 's|^\([^./]\)|./\1|')"
-SOCKET_PATH="$ROOT_PATH/mysql.sock"
 
 doStartup()
 {
@@ -76,8 +85,8 @@ doStartup()
 
 doShutdown()
 {
-    NUM_CONNECTIONS=$("$MYSQLADMIN" "--socket=$ROOT_PATH/mysql.sock" processlist | wc -l)
-    NUM_CONNECTIONS=$(expr $NUM_CONNECTIONS - 4)
+    NUM_CONNECTIONS="$("$MYSQLADMIN" "--socket=$ROOT_PATH/mysql.sock" processlist | wc -l)"
+    NUM_CONNECTIONS="$(expr $NUM_CONNECTIONS - 4)"
 
     if [ "$NUM_CONNECTIONS" -eq "1" ]; then
         echo "No active client connections detected"
@@ -86,7 +95,7 @@ doShutdown()
         echo "Active client connections detected - skipping server shutdown"
     fi
 
-    exit 0
+    exit
 }
 
 doStartup
@@ -102,7 +111,7 @@ while true; do
         exit
     fi
 
-    if ! kill -0 "$PPID" >/dev/null 2>&1 ; then
+    if ! kill -0 "$PPID" >/dev/null 2>&1; then
         doShutdown
     fi
 

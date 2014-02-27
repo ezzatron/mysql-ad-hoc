@@ -18,31 +18,54 @@ rely on a real MySQL server.
 
 ### mysql-ad-hoc
 
-    mysql-ad-hoc [path]
+    mysql-ad-hoc [path] [port] [address]
 
 Opens a command line MySQL client connected to the database at `[path]`. If the
 database does not exist, a new one will be created. `[path]` defaults to the
 current working directory.
 
+If `[port]` is specified, the underlying server will also listen on this port
+for all addresses. Additionally specifying `[address]` restricts the addresses
+that are listened to.
+
+Upon exiting the client, the underlying server will be shut down, unless there
+are active connections.
+
+Examples:
+
+    mysql-ad-hoc /path/to/db
+    mysql-ad-hoc /path/to/db 3333
+    mysql-ad-hoc /path/to/db 3333 localhost
+
 ### mysqld-ad-hoc
 
-    mysqld-ad-hoc [path]
+    mysqld-ad-hoc [path] [port] [address]
 
 Creates a temporary MySQL server for the database at `[path]`. If the database
 does not exist, a new one will be created. `[path]` defaults to the current
 working directory.
 
-The server will run until control-c is pressed (SIGINT). To connect to the
-server, use the socket file at `[path]/mysql.sock`:
+If `[port]` is specified, the server will also listen on this port for all
+addresses. Additionally specifying `[address]` restricts the addresses that are
+listened to.
+
+Upon detecting a control-c (SIGINT), the server will be shut down, unless there
+are active connections. To manually connect to the server via socket, use the
+socket at `[path]/mysql.sock`:
 
     mysql --socket=mysql.sock
 
 The server will also shut down automatically when the parent process exits,
 making it extremely suitable for execution from within another application.
 
+Examples:
+
+    mysqld-ad-hoc /path/to/db
+    mysqld-ad-hoc /path/to/db 3333
+    mysqld-ad-hoc /path/to/db 3333 localhost
+
 ## Features
 
-- Doesn't use any networking, only local socket access is allowed.
 - User permissions are ignored, no permission granting is necessary.
 - Skips as much unnecessary stuff as possible.
 - Socket located at `[path]/mysql.sock`.
@@ -54,6 +77,11 @@ making it extremely suitable for execution from within another application.
 
 - Initial database creation takes much longer that SQLite; around 10-15 seconds
   on a current-gen iMac. Any tips on reducing this time are welcome.
+- Manually opening a connection to a server, then shutting down the server
+  script can result in a detached server running in the background. The easiest
+  way to fix this is to ensure that all client connections are closed, run
+  `mysqld-ad-hoc` on the path, and let it handle shutdown correctly when it
+  closes.
 - Unsuitable for production use. Seriously, just don't.
 
 ## Requirements
