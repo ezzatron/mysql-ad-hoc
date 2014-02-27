@@ -51,9 +51,9 @@ If `[port]` is specified, the underlying server will also listen on this TCP
 port. Additionally, specifying `[address]` binds the server to the given
 address.
 
-If signalled with SIGINT (eg, by pressing control-c in the terminal), the server
-will be shut down, unless there are active connections. To manually connect to
-the server use the unix socket at `[path]/mysql.sock`:
+If signalled with SIGINT (e.g. by pressing control-c in the terminal), the
+server will be shut down, unless there are active connections. To manually
+connect to the server use the unix socket at `[path]/mysql.sock`:
 
     mysql --socket=mysql.sock
 
@@ -96,7 +96,6 @@ making it extremely suitable for execution from within another application.
 
 <!-- References -->
 
-[SQLite]: http://www.sqlite.org/
 [MySQL]: http://www.mysql.com/
 [mysql_install_db]: https://dev.mysql.com/doc/refman/5.7/en/mysql-install-db.html
 [mysqld_safe]: http://dev.mysql.com/doc/refman/5.7/en/mysqld-safe.html
