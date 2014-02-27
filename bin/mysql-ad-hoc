@@ -15,13 +15,18 @@ errorExit()
     exit 1
 }
 
+MYSQLADMIN="$(which mysqladmin)"
+if [ -z "$MYSQLADMIN" ]; then
+    errorExit "Error: mysqladmin executable not found."
+fi
+
 MYSQL="$(which mysql)"
-if test -z "$MYSQL"; then
+if [ -z "$MYSQL" ]; then
     errorExit "Error: mysql executable not found."
 fi
 
 MYSQLD_AD_HOC="$(dirname "$0")/mysqld-ad-hoc"
-if [ ! -f "$MYSQLD_AD_HOC" ] ; then
+if [ ! -f "$MYSQLD_AD_HOC" ]; then
     errorExit "Error: mysqld-ad-hoc executable not found."
 fi
 
@@ -29,13 +34,37 @@ ROOT_PATH="$(echo "${1:-.}" | sed 's|^\([^./]\)|./\1|')"
 SOCKET_PATH="$ROOT_PATH/mysql.sock"
 
 echo "Executing $MYSQLD_AD_HOC $ROOT_PATH"
-"$MYSQLD_AD_HOC" "$ROOT_PATH" &
+"$MYSQLD_AD_HOC" "$ROOT_PATH" > /dev/null &
 SERVER_PID="$!"
 
-while [ ! -S "$SOCKET_PATH" ] ; do
+while [ ! -S "$SOCKET_PATH" ]; do
     sleep 0.1
 done
 
 "$MYSQL" "--socket=$SOCKET_PATH"
-kill "$SERVER_PID"
-wait
+
+SERVER_KILLED=$(kill -0 "$SERVER_PID" >/dev/null 2>&1)
+if [ "$SERVER_KILLED" ]; then
+    kill "$SERVER_PID"
+    wait
+fi
+
+stopServer()
+{
+    echo "Stopping MySQL server"
+    "$MYSQLADMIN" "--socket=$1/mysql.sock" shutdown
+}
+
+if [ -S "$SOCKET_PATH" ]; then
+    NUM_CONNECTIONS=$("$MYSQLADMIN" "--socket=$ROOT_PATH/mysql.sock" processlist | wc -l)
+    NUM_CONNECTIONS=$(expr $NUM_CONNECTIONS - 4)
+
+    if [ "$NUM_CONNECTIONS" -eq "1" ]; then
+        echo "No active client connections detected"
+        stopServer "$ROOT_PATH"
+    else
+        if [ ! "$SERVER_KILLED" ]; then
+            echo "Active client connections detected - skipping server shutdown"
+        fi
+    fi
+fi

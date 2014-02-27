@@ -16,54 +16,37 @@ errorExit()
 }
 
 MYSQL_INSTALL_DB="$(which mysql_install_db)"
-if test -z "$MYSQL_INSTALL_DB"; then
+if [ -z "$MYSQL_INSTALL_DB" ]; then
     errorExit "Error: mysql_install_db executable not found."
 fi
 
 MYSQLD_SAFE="$(which mysqld_safe)"
-if test -z "$MYSQLD_SAFE"; then
+if [ -z "$MYSQLD_SAFE" ]; then
     errorExit "Error: mysqld_safe executable not found."
 fi
 
 MYSQLADMIN="$(which mysqladmin)"
-if test -z "$MYSQLADMIN"; then
+if [ -z "$MYSQLADMIN" ]; then
     errorExit "Error: mysqladmin executable not found."
 fi
 
+MYSQL_OPTIONS="--defaults-file=/dev/null --socket=./mysql.sock --pid-file=./mysql.pid --log-error=./mysql.err --general-log=1 --general-log-file=./mysql.log --skip-networking --skip-grant-tables"
+
 installDatabase()
 {
-    if test -d "$1/mysql"; then
+    if [ -d "$1/mysql" ]; then
         echo "Existing database found at $1"
         return
     fi
 
     echo "Installing new database to $1"
-    "$MYSQL_INSTALL_DB" \
-        --defaults-file=/dev/null \
-        "--datadir=$1" \
-        --socket=./mysql.sock \
-        --pid-file=./mysql.pid \
-        --log-error=./mysql.err \
-        --general-log=1 \
-        --general-log-file=./mysql.log \
-        --skip-networking \
-        --skip-grant-tables
+    "$MYSQL_INSTALL_DB" $MYSQL_OPTIONS "--datadir=$1"
 }
 
 startServer()
 {
     echo "Starting MySQL server"
-    "$MYSQLD_SAFE" \
-        --defaults-file=/dev/null \
-        "--datadir=$1" \
-        --socket=./mysql.sock \
-        --pid-file=./mysql.pid \
-        --log-error=./mysql.err \
-        --general-log=1 \
-        --general-log-file=./mysql.log \
-        --skip-networking \
-        --skip-grant-tables \
-        &
+    "$MYSQLD_SAFE" $MYSQL_OPTIONS "--datadir=$1" &
 }
 
 stopServer()
@@ -73,20 +56,53 @@ stopServer()
 }
 
 ROOT_PATH="$(echo "${1:-.}" | sed 's|^\([^./]\)|./\1|')"
+SOCKET_PATH="$ROOT_PATH/mysql.sock"
+
+doStartup()
+{
+    if [ -d "$ROOT_PATH/mysql" ]; then
+        echo "Existing database found at $ROOT_PATH"
+    else
+        installDatabase "$ROOT_PATH"
+    fi
+
+    if [ -S "$SOCKET_PATH" ]; then
+        echo "MySQL server already running"
+        exit
+    else
+        startServer "$ROOT_PATH"
+    fi
+}
 
 doShutdown()
 {
-    stopServer "$ROOT_PATH"
+    NUM_CONNECTIONS=$("$MYSQLADMIN" "--socket=$ROOT_PATH/mysql.sock" processlist | wc -l)
+    NUM_CONNECTIONS=$(expr $NUM_CONNECTIONS - 4)
+
+    if [ "$NUM_CONNECTIONS" -eq "1" ]; then
+        echo "No active client connections detected"
+        stopServer "$ROOT_PATH"
+    else
+        echo "Active client connections detected - skipping server shutdown"
+    fi
+
     exit 0
 }
 
-installDatabase "$ROOT_PATH"
-startServer "$ROOT_PATH"
-
+doStartup
 trap doShutdown SIGINT SIGHUP SIGTERM SIGABRT
 
+while [ ! -S "$SOCKET_PATH" ]; do
+    sleep 0.1
+done
+
 while true; do
-    if ! kill -0 "$PPID" 2>&1 >/dev/null ; then
+    if [ ! -S "$SOCKET_PATH" ]; then
+        echo "MySQL server shutdown externally"
+        exit
+    fi
+
+    if ! kill -0 "$PPID" >/dev/null 2>&1 ; then
         doShutdown
     fi
 
