@@ -31,7 +31,7 @@ that are listened to.
 Upon exiting the client, the underlying server will be shut down, unless there
 are active connections.
 
-Examples:
+#### Examples
 
     mysql-ad-hoc /path/to/db
     mysql-ad-hoc /path/to/db 3333
@@ -58,7 +58,7 @@ socket at `[path]/mysql.sock`:
 The server will also shut down automatically when the parent process exits,
 making it extremely suitable for execution from within another application.
 
-Examples:
+#### Examples
 
     mysqld-ad-hoc /path/to/db
     mysqld-ad-hoc /path/to/db 3333
