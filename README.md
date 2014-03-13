@@ -7,8 +7,8 @@
 ## Installation
 
 - Ensure the [required dependencies] are installed.
-- Download [mysqld-ad-hoc] and [mysql-ad-hoc], put them in the PATH, and make
-  executable.
+- Download [mysqld-ad-hoc] and [mysql-ad-hoc], put them somewhere in the system
+  path, and make them executable.
 
 ## Purpose
 
