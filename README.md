@@ -102,12 +102,12 @@ making it extremely suitable for execution from within another application.
 
 <!-- References -->
 
-[mysql-ad-hoc]: ezzatron.com/mysql-ad-hoc/mysql-ad-hoc
+[mysql-ad-hoc]: http://ezzatron.com/mysql-ad-hoc/mysql-ad-hoc
 [mysql]: http://dev.mysql.com/doc/refman/5.7/en/mysql.html
 [MySQL]: http://www.mysql.com/
 [mysql_install_db]: https://dev.mysql.com/doc/refman/5.7/en/mysql-install-db.html
 [mysqladmin]: http://dev.mysql.com/doc/refman/5.7/en/mysqladmin.html
-[mysqld-ad-hoc]: ezzatron.com/mysql-ad-hoc/mysqld-ad-hoc
+[mysqld-ad-hoc]: http://ezzatron.com/mysql-ad-hoc/mysqld-ad-hoc
 [mysqld_safe]: http://dev.mysql.com/doc/refman/5.7/en/mysqld-safe.html
 [required dependencies]: #requirements
 
