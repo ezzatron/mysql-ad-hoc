@@ -4,6 +4,12 @@
 
 [![The most recent stable version is 0.1.0][version-image]][Semantic versioning]
 
+## Installation
+
+- Ensure the [required dependencies] are installed.
+- Download [mysqld-ad-hoc] and [mysql-ad-hoc], put them in the PATH, and make
+  executable.
+
 ## Purpose
 
 *MySQL ad hoc* is a command line tool for creating short lifespan [MySQL]
@@ -96,11 +102,14 @@ making it extremely suitable for execution from within another application.
 
 <!-- References -->
 
+[mysql-ad-hoc]: ezzatron.com/mysql-ad-hoc/mysql-ad-hoc
+[mysql]: http://dev.mysql.com/doc/refman/5.7/en/mysql.html
 [MySQL]: http://www.mysql.com/
 [mysql_install_db]: https://dev.mysql.com/doc/refman/5.7/en/mysql-install-db.html
-[mysqld_safe]: http://dev.mysql.com/doc/refman/5.7/en/mysqld-safe.html
-[mysql]: http://dev.mysql.com/doc/refman/5.7/en/mysql.html
 [mysqladmin]: http://dev.mysql.com/doc/refman/5.7/en/mysqladmin.html
+[mysqld-ad-hoc]: ezzatron.com/mysql-ad-hoc/mysqld-ad-hoc
+[mysqld_safe]: http://dev.mysql.com/doc/refman/5.7/en/mysqld-safe.html
+[required dependencies]: #requirements
 
 [Semantic versioning]: http://semver.org/
 [version-image]: http://img.shields.io/:semver-0.1.0-yellow.svg "This project uses semantic versioning"
