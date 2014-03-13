@@ -67,6 +67,12 @@ stopServer()
     "$MYSQLADMIN" "--socket=$1/mysql.sock" shutdown
 }
 
+numConnections()
+{
+    NUM_CONNECTIONS="$("$MYSQLADMIN" "--socket=$ROOT_PATH/mysql.sock" processlist | wc -l)"
+    NUM_CONNECTIONS="$(expr $NUM_CONNECTIONS - 4)"
+}
+
 doStartup()
 {
     if [ -d "$ROOT_PATH/mysql" ]; then
@@ -83,23 +89,23 @@ doStartup()
     fi
 }
 
-doShutdown()
+CAUGHT_SIGINT="0"
+handleSigint()
 {
-    NUM_CONNECTIONS="$("$MYSQLADMIN" "--socket=$ROOT_PATH/mysql.sock" processlist | wc -l)"
-    NUM_CONNECTIONS="$(expr $NUM_CONNECTIONS - 4)"
+    CAUGHT_SIGINT="1"
+    echo "Caught SIGINT, will shut down after clients disconnect"
+}
 
-    if [ "$NUM_CONNECTIONS" -eq "1" ]; then
-        echo "No active client connections detected"
-        stopServer "$ROOT_PATH"
-    else
-        echo "Active client connections detected - skipping server shutdown"
-    fi
-
+handleSigterm()
+{
+    echo "Caught SIGTERM, shutting down immediately"
+    stopServer "$ROOT_PATH"
     exit
 }
 
 doStartup
-trap doShutdown SIGINT SIGHUP SIGTERM SIGABRT
+trap handleSigint SIGINT
+trap handleSigterm SIGTERM
 
 while [ ! -S "$SOCKET_PATH" ]; do
     sleep 0.1
@@ -111,8 +117,14 @@ while true; do
         exit
     fi
 
-    if ! kill -0 "$PPID" >/dev/null 2>&1; then
-        doShutdown
+    if [ "$CAUGHT_SIGINT" -eq "1" ] || ! kill -0 "$PPID" >/dev/null 2>&1; then
+        numConnections
+
+        if [ "$NUM_CONNECTIONS" -eq "1" ]; then
+            echo "No active client connections detected"
+            stopServer "$ROOT_PATH"
+            exit
+        fi
     fi
 
     sleep 1
