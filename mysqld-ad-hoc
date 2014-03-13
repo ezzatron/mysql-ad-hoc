@@ -1,0 +1,131 @@
+#!/usr/bin/env bash
+
+if [ "--help" = "$1" ]; then
+    echo "Usage: mysqld-ad-hoc [path] [port] [address]"
+    exit
+fi
+if [ "--version" = "$1" ]; then
+    echo "mysqld-ad-hoc 0.1.0"
+    exit
+fi
+
+errorExit()
+{
+    echo "$1" 1>&2
+    exit 1
+}
+
+MYSQL_INSTALL_DB="$(which mysql_install_db)"
+if [ -z "$MYSQL_INSTALL_DB" ]; then
+    errorExit "Error: mysql_install_db executable not found."
+fi
+
+MYSQLD_SAFE="$(which mysqld_safe)"
+if [ -z "$MYSQLD_SAFE" ]; then
+    errorExit "Error: mysqld_safe executable not found."
+fi
+
+MYSQLADMIN="$(which mysqladmin)"
+if [ -z "$MYSQLADMIN" ]; then
+    errorExit "Error: mysqladmin executable not found."
+fi
+
+
+ROOT_PATH="$(echo "${1:-.}" | sed 's|^\([^./]\)|./\1|')"
+SOCKET_PATH="$ROOT_PATH/mysql.sock"
+
+PORT="$2"
+ADDRESS="${3:-0.0.0.0}"
+
+MYSQL_OPTIONS="--defaults-file=/dev/null --socket=./mysql.sock --pid-file=./mysql.pid --log-error=./mysql.err --general-log=1 --general-log-file=./mysql.log --skip-grant-tables"
+
+installDatabase()
+{
+    if [ -d "$1/mysql" ]; then
+        echo "Existing database found at $1"
+        return
+    fi
+
+    echo "Installing new database to $1"
+    "$MYSQL_INSTALL_DB" $MYSQL_OPTIONS "--datadir=$1"
+}
+
+startServer()
+{
+    echo "Starting MySQL server"
+
+    if [ "$PORT" ]; then
+        "$MYSQLD_SAFE" $MYSQL_OPTIONS "--bind-address=$ADDRESS" "--port=$PORT" "--datadir=$1" &
+    else
+        "$MYSQLD_SAFE" $MYSQL_OPTIONS --skip-networking "--datadir=$1" &
+    fi
+}
+
+stopServer()
+{
+    echo "Stopping MySQL server"
+    "$MYSQLADMIN" "--socket=$1/mysql.sock" shutdown
+}
+
+numConnections()
+{
+    NUM_CONNECTIONS="$("$MYSQLADMIN" "--socket=$ROOT_PATH/mysql.sock" processlist | wc -l)"
+    NUM_CONNECTIONS="$(expr $NUM_CONNECTIONS - 4)"
+}
+
+doStartup()
+{
+    if [ -d "$ROOT_PATH/mysql" ]; then
+        echo "Existing database found at $ROOT_PATH"
+    else
+        installDatabase "$ROOT_PATH"
+    fi
+
+    if [ -S "$SOCKET_PATH" ]; then
+        echo "MySQL server already running"
+        exit
+    else
+        startServer "$ROOT_PATH"
+    fi
+}
+
+CAUGHT_SIGINT="0"
+handleSigint()
+{
+    CAUGHT_SIGINT="1"
+    echo "Caught SIGINT, will shut down after clients disconnect"
+}
+
+handleSigterm()
+{
+    echo "Caught SIGTERM, shutting down immediately"
+    stopServer "$ROOT_PATH"
+    exit
+}
+
+doStartup
+trap handleSigint SIGINT
+trap handleSigterm SIGTERM
+
+while [ ! -S "$SOCKET_PATH" ]; do
+    sleep 0.1
+done
+
+while true; do
+    if [ ! -S "$SOCKET_PATH" ]; then
+        echo "MySQL server shutdown externally"
+        exit
+    fi
+
+    if [ "$CAUGHT_SIGINT" -eq "1" ] || ! kill -0 "$PPID" >/dev/null 2>&1; then
+        numConnections
+
+        if [ "$NUM_CONNECTIONS" -eq "1" ]; then
+            echo "No active client connections detected"
+            stopServer "$ROOT_PATH"
+            exit
+        fi
+    fi
+
+    sleep 1
+done
